@@ -34,9 +34,10 @@ cookieParser() helps in extracting and parsing cookies sent by the client.
 */
 
 const corsOptions = {
-    origin:'http//localhost:5173',
-    Credentials:true
-}
+    origin: 'http://localhost:5173',  // Ensure this matches the frontend origin exactly
+    credentials: true  // Allow credentials like cookies, authorization headers, etc.
+};
+
 
 /*
 If your frontend and backend are hosted on different origins (e.g., different ports during development), the browser would block requests from your frontend to your backend 
@@ -44,7 +45,12 @@ due to the Same-Origin Policy. By setting up CORS and allowing requests from htt
 cross-origin requests and send cookies/credentials when needed.
 */
 
-app.use(cors(corsOptions))
+app.use(cors(corsOptions));
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
+
 const PORT = process.env.PORT || 3000;
 
 // app.get("/home",(req,res) =>{
