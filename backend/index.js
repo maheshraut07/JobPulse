@@ -53,13 +53,6 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-// app.get("/home",(req,res) =>{
-//     return res.status(200).json({
-//         message:"I am coming from the backend",
-//         success:true
-//     })
-// })
-
 
 
 
