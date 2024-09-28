@@ -1,158 +1,156 @@
-import {User} from '../models/user.model.js'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { User } from "../models/user.model.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import getDataUri from "../utils/datauri.js";
+import cloudinary from "../utils/cloudinary.js";
 
-
-// business logic for registering the user
-
-export const register = async (req,res) => {
-    try{
-        const {fullname, email, phoneNumber, password, role} = req.body
-        if(!fullname || !email || !phoneNumber || !password || !role){
+export const register = async (req, res) => {
+    try {
+        const { fullname, email, phoneNumber, password, role } = req.body;
+         
+        if (!fullname || !email || !phoneNumber || !password || !role) {
             return res.status(400).json({
-                message:"Somethinng is Missing",
-                success:false
+                message: "Something is missing",
+                success: false
             });
-        }
+        };
+        const file = req.file;
+        const fileUri = getDataUri(file);
+        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
-        const user = await User.findOne({email})
-        if(user){
+        const user = await User.findOne({ email });
+        if (user) {
             return res.status(400).json({
-                message:"User already exist with this email",
-                success:false,
+                message: 'User already exist with this email.',
+                success: false,
             })
         }
-
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         await User.create({
             fullname,
             email,
             phoneNumber,
-            password:hashedPassword,
+            password: hashedPassword,
             role,
-        })
+            profile:{
+                profilePhoto:cloudResponse.secure_url,
+            }
+        });
 
         return res.status(201).json({
-            message:"Account created Successfully !!!",
-            success:true
-            
-        })
-
-    }catch(error){
-        console.log(error)
+            message: "Account created successfully.",
+            success: true
+        });
+    } catch (error) {
+        console.log(error);
     }
 }
-
-// business logic for logggin in the user 
-
-export const login = async (req,res) =>{
+export const login = async (req, res) => {
     try {
-        const {email, password, role} = req.body
-        if(!email || !password || !role){
-            return res.status(400).json({
-                message:"Something is Missing !!!",
-                success:false
-            })
-        }
-
-        let userToBeLoggedIn = await User.findOne({email})
-
-        if(!userToBeLoggedIn){
-            return res.status(400).json({
-                message:"User does not Exists !!!",
-                success:false
-            })
-        }
-
-        const isPasswordMatch = await bcrypt.compare(password, userToBeLoggedIn.password)
-        if(!isPasswordMatch){
-            return res.status(400).json({
-                message:"Incorrect Email of Password !!!",
-                success:false
-            })
-        }
+        const { email, password, role } = req.body;
         
-        if(role !== userToBeLoggedIn.role){
+        if (!email || !password || !role) {
             return res.status(400).json({
-                message:"User does not exist with this role !!!",
-                success:false
+                message: "Something is missing",
+                success: false
+            });
+        };
+        let user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({
+                message: "Incorrect email or password.",
+                success: false,
             })
         }
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(400).json({
+                message: "Incorrect email or password.",
+                success: false,
+            })
+        };
+        // check role is correct or not
+        if (role !== user.role) {
+            return res.status(400).json({
+                message: "Account doesn't exist with current role.",
+                success: false
+            })
+        };
 
         const tokenData = {
-            userId: userToBeLoggedIn._id
+            userId: user._id
+        }
+        const token = await jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: '1d' });
+
+        user = {
+            _id: user._id,
+            fullname: user.fullname,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            profile: user.profile
         }
 
-        const token = await jwt.sign(tokenData, process.env.SECRET_KEY, {expiresIn:'1d'})
-
-        userToBeLoggedIn = {
-            _id:userToBeLoggedIn._id,
-            fullname:userToBeLoggedIn.fullname,
-            email:userToBeLoggedIn.email,
-            phoneNumber:userToBeLoggedIn.phoneNumber,
-            role:userToBeLoggedIn.role,
-            profile:userToBeLoggedIn.profile
-        }
-
-        return res.status(200).cookie("token", token, {maxAge:1*24*60*60*1000, httpsOnly:true, sameSite:'strict'})
-        .json({
-            message:`Welcome back ${userToBeLoggedIn.fullname}`,
-            userToBeLoggedIn,
-            success:true
+        return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpsOnly: true, sameSite: 'strict' }).json({
+            message: `Welcome back ${user.fullname}`,
+            user,
+            success: true
         })
-
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
 }
-
-
-// Buiness Logic for the logout 
-
-export const logout = async (req,res) => {
+export const logout = async (req, res) => {
     try {
-        return res.status(200).cookie("token", "", {maxAge:0}).json({   // for setting the value of the cookie to blank and setting the expiration time to 0 means deleting the cookie 
-            message:"Logged Out successfully !!!",
-            success:true
+        return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+            message: "Logged out successfully.",
+            success: true
         })
-        
     } catch (error) {
-        console.log(error)
-    } 
+        console.log(error);
+    }
 }
-
-// Business Logic for updating the profile
-
-export const updateProfile = async (req,res) => {
+export const updateProfile = async (req, res) => {
     try {
-        const {fullname, email, phoneNumber, bio, skills} = req.body
-        const file = req.file
-        // cludinary will be here for accessing the files 
-        let skillsArray
-        if(skills) skillsArray = skills.split(",")
-        const userId = req.id // the req.id will be fetched by the middleware authentication
-
+        const { fullname, email, phoneNumber, bio, skills } = req.body;
         
-        let user = await User.findOne(userId)
+        const file = req.file;
+        // cloudinary ayega idhar
+        const fileUri = getDataUri(file);
+        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
-        if(!user){
+
+
+        let skillsArray;
+        if(skills){
+            skillsArray = skills.split(",");
+        }
+        const userId = req.id; // middleware authentication
+        let user = await User.findById(userId);
+
+        if (!user) {
             return res.status(400).json({
-                message:"User not found !!!",
-                success:false
+                message: "User not found.",
+                success: false
             })
         }
-        
-
-        // updating the data
+        // updating data
         if(fullname) user.fullname = fullname
         if(email) user.email = email
-        if(phoneNumber) user.phoneNumber = phoneNumber
+        if(phoneNumber)  user.phoneNumber = phoneNumber
         if(bio) user.profile.bio = bio
         if(skills) user.profile.skills = skillsArray
+      
+        // resume comes later here...
+        if(cloudResponse){
+            user.profile.resume = cloudResponse.secure_url // save the cloudinary url
+            user.profile.resumeOriginalName = file.originalname // Save the original file name
+        }
 
-        //saving the user in the mongodDB collection
-        await user.save()
+
+        await user.save();
+
         user = {
             _id: user._id,
             fullname: user.fullname,
@@ -163,12 +161,11 @@ export const updateProfile = async (req,res) => {
         }
 
         return res.status(200).json({
-            message:"profile updated successfully !!!",
+            message:"Profile updated successfully.",
             user,
             success:true
         })
-        
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
 }
