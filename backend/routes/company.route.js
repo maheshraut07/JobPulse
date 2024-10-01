@@ -11,3 +11,4 @@ router.route("/get/:id").get(isAuthenticated,getCompanyById);
 router.route("/update/:id").put(isAuthenticated,singleUpload, updateCompany);
 
 export default router;
+

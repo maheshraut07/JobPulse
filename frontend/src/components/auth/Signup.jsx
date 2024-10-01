@@ -22,7 +22,7 @@ const Signup = () => {
         role: "",
         file: ""
     });
-    const {loading} = useSelector(store=>store.auth);
+    const {loading,user} = useSelector(store=>store.auth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -48,36 +48,25 @@ const Signup = () => {
             dispatch(setLoading(true));
             const res = await axios.post(`${USER_API_END_POINT}/register`, formData, {
                 headers: { 'Content-Type': "multipart/form-data" },
-                withCredentials: true,  // Ensures credentials like cookies are sent
+                withCredentials: true,
             });
-        
             if (res.data.success) {
                 navigate("/login");
                 toast.success(res.data.message);
             }
         } catch (error) {
             console.log(error);
-            if (error.response) {
-                // Handle known error
-                toast.error(error.response.data.message);
-            } else if (error.request) {
-                // The request was made but no response was received
-                toast.error("Network error: No response from server.");
-            } else {
-                // Something happened in setting up the request that triggered an Error
-                toast.error("An unexpected error occurred.");
-            }
-        }finally{
+            toast.error(error.response.data.message);
+        } finally{
             dispatch(setLoading(false));
         }
     }
 
-    // useEffect(()=>{
-    //     if(user){
-    //         navigate("/");
-    //     }
-    // },[])
-
+    useEffect(()=>{
+        if(user){
+            navigate("/");
+        }
+    },[])
     return (
         <div>
             <Navbar />
@@ -91,7 +80,7 @@ const Signup = () => {
                             value={input.fullname}
                             name="fullname"
                             onChange={changeEventHandler}
-                            placeholder="user user user"
+                            placeholder="patel"
                         />
                     </div>
                     <div className='my-2'>
@@ -101,7 +90,7 @@ const Signup = () => {
                             value={input.email}
                             name="email"
                             onChange={changeEventHandler}
-                            placeholder="user@gmail.com"
+                            placeholder="patel@gmail.com"
                         />
                     </div>
                     <div className='my-2'>
@@ -121,7 +110,7 @@ const Signup = () => {
                             value={input.password}
                             name="password"
                             onChange={changeEventHandler}
-                            placeholder="user@123"
+                            placeholder="patel@gmail.com"
                         />
                     </div>
                     <div className='flex items-center justify-between'>
@@ -139,7 +128,7 @@ const Signup = () => {
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Input
-                                    type="radio"    
+                                    type="radio"
                                     name="role"
                                     value="recruiter"
                                     checked={input.role === 'recruiter'}
