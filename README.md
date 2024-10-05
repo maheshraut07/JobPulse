@@ -1,4 +1,4 @@
-# JobPortal
+# JobPulse
 
 **JobPortal** is a web application where students can explore and apply for jobs in the tech field. Additionally, an admin can log in to post job listings. The platform is built with a modern tech stack using **React.js**, **Shadcn-UI**, **Tailwind CSS**, **Redux Toolkit** for the frontend, **Node.js** and **Express.js** for the backend, and **MongoDB** as the database.
 
