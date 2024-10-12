@@ -11,7 +11,7 @@ const fitlerData = [
     },
     {
         fitlerType: "Industry",
-        array: ["Frontend Developer", "Backend Developer", "FullStack Developer", "Data Scientist", "Machine Learning Engineer", "Tester"]
+        array: ["Frontend Developer", "Backend Developer", "FullStack Developer", "Data Scientist"]
     },
     {
         fitlerType: "Salary",
@@ -25,25 +25,26 @@ const FilterCard = () => {
     const changeHandler = (value) => {
         setSelectedValue(value);
     }
-    useEffect(()=>{
+    useEffect(() => {
         dispatch(setSearchedQuery(selectedValue));
-    },[selectedValue]);
+    }, [selectedValue]);
+
     return (
-        <div className='w-full bg-white p-3 rounded-md'>
-            <h1 className='font-bold text-lg'>Filter Jobs</h1>
-            <hr className='mt-3' />
+        <div className='w-full md:w-1/3 lg:w-1/4 bg-white p-4 md:p-6 rounded-lg shadow-md mx-auto'>
+            <h1 className='font-bold text-lg md:text-xl text-gray-700'>Filter Jobs</h1>
+            <hr className='mt-3 mb-5' />
             <RadioGroup value={selectedValue} onValueChange={changeHandler}>
                 {
                     fitlerData.map((data, index) => (
-                        <div>
-                            <h1 className='font-bold text-lg'>{data.fitlerType}</h1>
+                        <div key={index} className='mb-4'>
+                            <h2 className='font-semibold text-md md:text-lg text-gray-600'>{data.fitlerType}</h2>
                             {
                                 data.array.map((item, idx) => {
-                                    const itemId = `id${index}-${idx}`
+                                    const itemId = `id${index}-${idx}`;
                                     return (
-                                        <div className='flex items-center space-x-2 my-2'>
-                                            <RadioGroupItem value={item} id={itemId} />
-                                            <Label htmlFor={itemId}>{item}</Label>
+                                        <div key={itemId} className='flex items-center space-x-3 my-2'>
+                                            <RadioGroupItem value={item} id={itemId} className='cursor-pointer' />
+                                            <Label htmlFor={itemId} className='text-sm md:text-base text-gray-600'>{item}</Label>
                                         </div>
                                     )
                                 })
@@ -56,4 +57,4 @@ const FilterCard = () => {
     )
 }
 
-export default FilterCard
+export default FilterCard;
