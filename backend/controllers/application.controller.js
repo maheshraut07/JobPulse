@@ -1,5 +1,7 @@
 import { Application } from "../models/application.model.js";
 import { Job } from "../models/job.model.js";
+// import { sendApplicationEmail } from "../utils/email.js";
+import {User} from '../models/user.model.js'
 
 export const applyJob = async (req, res) => {
     try {
@@ -37,6 +39,12 @@ export const applyJob = async (req, res) => {
 
         job.applications.push(newApplication._id);
         await job.save();
+
+        // send the email to the user after successfull application to the job 
+
+        // const user = await User.findById(userId)
+        // await sendApplicationEmail(user.email, job.title)
+
         return res.status(201).json({
             message:"Job applied successfully.",
             success:true
