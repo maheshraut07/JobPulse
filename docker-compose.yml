@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      -"8000:8000"
+    environment:
+      - NODE_ENV=developement
+      - PORT=8000
+      - MONGODB_URI = mongodb+srv://maheshraut8528:maheshraut8528@cluster0.a4w2g.mongodb.net/
+      - EMAIL_USER = rautmahesh213@gmail.com
+      - EMAIL_PASS = c206213213
+      - SECRET_KEY = MahesehBhimraoRaut 
+      - CLOUD_NAME = ds6kzhmiv
+      - API_KEY = 777844835798869
+      - API_SECRET = psV6d9PfpTXYnEh8U14QimQYBac
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: 
+      context: ./frontend
+    container_name: frontend
+    ports:
+      -"3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      -"27017:27017"
+    volumes:
+      -mongo-data:/data/db
+
+volumes:
+  mongo-data:
+
+
+
